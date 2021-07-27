@@ -20,7 +20,7 @@ import { CLOSING_AT_TIME_DECREASE_GSMC, CLOSING_AT_TIME_INCREASE } from '../../u
 function insertNewProposal(event: NewMultiCallProposal): void {
   let ent = new GenericSchemeMultiCallProposal(event.params._proposalId.toHex());
   ent.dao = event.params._avatar.toHex();
-  ent.contractsToCall = event.params._contractsToCall as Bytes[];
+  ent.contractsToCall = changetype<Bytes[]>(event.params._contractsToCall);
   ent.callsData = event.params._callsData;
   ent.values = event.params._values;
   ent.executed = false;
@@ -68,11 +68,15 @@ export function handleProposalExecuted(
   if (ent != null) {
     ent.executed = true;
     let proposal = getProposal(event.params._proposalId.toHex());
-    proposal.closingAt = (
-      BigInt.fromI32(CLOSING_AT_TIME_INCREASE).minus(
-        proposal.closingAt.plus(BigInt.fromI32(CLOSING_AT_TIME_DECREASE_GSMC)),
-      )
-    ).times(BigInt.fromI32(100));
+
+    let proposalClosingAt = proposal.closingAt
+    if (proposalClosingAt) {
+        proposal.closingAt = (
+            BigInt.fromI32(CLOSING_AT_TIME_INCREASE).minus(
+                proposalClosingAt.plus(BigInt.fromI32(CLOSING_AT_TIME_DECREASE_GSMC)),
+            )
+        ).times(BigInt.fromI32(100));
+    }
     proposal.save();
   }
 

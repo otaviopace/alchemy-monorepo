@@ -353,8 +353,6 @@ export function updateGPProposal(
   let proposalScheme = proposal.scheme;
 
   let scheme: ControllerScheme | null;
-
-  let scheme = ControllerScheme.load(proposalScheme);
   if (proposalScheme) {
     scheme = ControllerScheme.load(proposalScheme);
   }

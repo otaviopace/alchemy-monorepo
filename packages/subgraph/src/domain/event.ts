@@ -57,10 +57,16 @@ export function addVoteFlipEvent(proposalId: Bytes, proposal: Proposal, voter: A
 }
 
 export function addNewProposalEvent(proposalId: Bytes, proposal: Proposal, timestamp: BigInt): void {
+    let proposalTitle = proposal.title;
+
+    if (proposalTitle === null) {
+        proposalTitle = ''
+    }
+
     addEvent(
         'NewProposal',
         crypto.keccak256(concat(proposalId, changetype<ByteArray>(timestamp))).toHex(),
-        '{ "title": "' + fixJsonQuotes(proposal.title || '') + '" }',
+        '{ "title": "' + fixJsonQuotes(proposalTitle) + '" }',
         proposalId.toHex(),
         proposal.proposer,
         proposal.dao,

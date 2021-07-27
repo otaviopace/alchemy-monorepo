@@ -122,7 +122,7 @@ function updateProposalExecution(proposalId: Bytes, decision: BigInt): void {
     ent = new SchemeRegistrarProposal(proposalId.toHex());
   }
   ent.decision = decision;
-  if (ent.schemeToRegister != null) {
+  if (ent.schemeToRegister !== null) {
     ent.schemeRegistered = true;
   } else {
     ent.schemeRemoved = true;

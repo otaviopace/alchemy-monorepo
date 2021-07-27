@@ -19,7 +19,9 @@ function insertNewProposal(event: NewCallProposal): void {
   let genericSchemeParams = GenericSchemeParam.load(event.address.toHex());
   let ent = new GenericSchemeProposal(event.params._proposalId.toHex());
   ent.dao = event.params._avatar.toHex();
-  ent.contractToCall = genericSchemeParams.contractToCall;
+  if (genericSchemeParams) {
+      ent.contractToCall = genericSchemeParams.contractToCall;
+  }
   ent.callData = event.params._callData;
   ent.value = event.params._value;
   ent.executed = false;
