@@ -14,7 +14,7 @@ export function handleUpdatedContractsWhitelist(
   let genericSchemeMultiCallParams = GenericSchemeMultiCallParam.load(genericSchemeMultiCall);
   if (genericSchemeMultiCallParams !== null) {
     let whitelistedContracts: Bytes[] = [];
-    let contractsAddresses: Bytes[] = event.params._contractsAddresses as Bytes[];
+    let contractsAddresses: Bytes[] = changetype<Bytes[]>(event.params._contractsAddresses);
     let contractsWhitelisted = event.params._contractsWhitelisted;
     let currentWhiteList: Bytes[] = genericSchemeMultiCallParams.contractsWhiteList as Bytes[];
     for (let i = 0; i < contractsWhitelisted.length; i++) {
@@ -22,7 +22,15 @@ export function handleUpdatedContractsWhitelist(
         whitelistedContracts.push(contractsAddresses[i]);
       }
     }
-    for (let i = 0; i < genericSchemeMultiCallParams.contractsWhiteList.length; i++) {
+
+    let genericSchemeMultiCallParamsContractsWhiteList = genericSchemeMultiCallParams.contractsWhiteList
+    let genericSchemeMultiCallParamsContractsWhiteListLength = 0
+
+    if (genericSchemeMultiCallParamsContractsWhiteList) {
+      genericSchemeMultiCallParamsContractsWhiteListLength = genericSchemeMultiCallParamsContractsWhiteList.length
+    }
+
+    for (let i = 0; i < genericSchemeMultiCallParamsContractsWhiteListLength; i++) {
       if (contractsAddresses.indexOf(currentWhiteList[i]) === -1) {
         whitelistedContracts.push(currentWhiteList[i]);
       }
