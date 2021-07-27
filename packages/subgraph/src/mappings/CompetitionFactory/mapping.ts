@@ -20,6 +20,9 @@ export function handleNewCompetition(event: NewCompetition): void {
   }
 
   let competitionFactoryInfo = ContractInfo.load(event.address.toHex());
+  if (competitionFactoryInfo === null) {
+    return;
+  }
 
   let competitionTemplate = fetchTemplateName(
     'Competition',
@@ -31,7 +34,7 @@ export function handleNewCompetition(event: NewCompetition): void {
     competitionFactoryInfo.version,
   );
 
-  if (competitionTemplate == null || contributionRewardExtTemplate == null) {
+  if (competitionTemplate === null || contributionRewardExtTemplate === null) {
     // We're missing a template version in the subgraph
     return;
   }

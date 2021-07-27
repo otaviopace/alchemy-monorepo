@@ -20,12 +20,16 @@ export function handleNewCL4R(event: NewCL4R): void {
 
   let continuousLocking4ReputationFactoryInfo = ContractInfo.load(event.address.toHex());
 
+  if (continuousLocking4ReputationFactoryInfo === null) {
+    return;
+  }
+
   let continuousLocking4ReputationTemplate = fetchTemplateName(
     'ContinuousLocking4Reputation',
     continuousLocking4ReputationFactoryInfo.version,
   );
 
-  if (continuousLocking4ReputationTemplate == null) {
+  if (continuousLocking4ReputationTemplate === null) {
     // We're missing a template version in the subgraph
     return;
   }

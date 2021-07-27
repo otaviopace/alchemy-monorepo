@@ -20,12 +20,16 @@ export function handleNewGenericSchemeMultiCall(event: NewGenericSchemeMultiCall
 
   let genericSchemeMultiCallFactoryInfo = ContractInfo.load(event.address.toHex());
 
+  if (genericSchemeMultiCallFactoryInfo === null) {
+    return;
+  }
+
   let genericSchemeMultiCallTemplate = fetchTemplateName(
     'GenericSchemeMultiCall',
     genericSchemeMultiCallFactoryInfo.version,
   );
 
-  if (genericSchemeMultiCallTemplate == null) {
+  if (genericSchemeMultiCallTemplate === null) {
     // We're missing a template version in the subgraph
     return;
   }

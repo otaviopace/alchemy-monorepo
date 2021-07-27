@@ -85,13 +85,13 @@ export function handleTrackDAO(event: TrackDAO): void {
 
   // Tell the subgraph to start indexing events from the:
   // Avatar, Controller, DAOToken, and Reputation contracts
-  createTemplate(avatarTemplate, avatar);
-  createTemplate(reputationTemplate, reputation);
-  createTemplate(daoTokenTemplate, daoToken);
+  createTemplate(avatarTemplate!, avatar);
+  createTemplate(reputationTemplate!, reputation);
+  createTemplate(daoTokenTemplate!, daoToken);
 
   // Track the Controller if it isn't a UController we're already tracking
   if (universalController == false) {
-    createTemplate(controllerTemplate, controller);
+    createTemplate(controllerTemplate!, controller);
   }
 
   // Note, no additional work is needed here because...

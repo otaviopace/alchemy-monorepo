@@ -332,7 +332,7 @@ export function daoRegister(dao: Address, tag: string): void {
 
 export function addDaoMember(reputationHolder: ReputationHolder): void {
   let dao = getReputation(reputationHolder.contract.toHex()).dao;
-  if (dao == null) {
+  if (dao === null) {
     // reputation that's not attached to a DAO
     return;
   }
@@ -348,7 +348,7 @@ export function addDaoMember(reputationHolder: ReputationHolder): void {
 
 export function removeDaoMember(reputationHolder: ReputationHolder): void {
    let dao = getReputation(reputationHolder.contract.toHex()).dao;
-   if (dao == null) {
+   if (dao === null) {
      // reputation that's not attached to a DAO
      return;
    }

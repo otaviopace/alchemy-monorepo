@@ -96,7 +96,7 @@ export function handleOwnershipTransferred(event: OwnershipTransferred): void {
   updateTokenContract(event.address, null);
 }
 
-function updateTokenContract(contract: Address , tokenHolder: string): void {
+function updateTokenContract(contract: Address , tokenHolder: string | null): void {
   let token = DAOToken.bind(contract);
   let tokenContract = TokenContract.load(contract.toHex());
   if (tokenContract == null) {
@@ -104,11 +104,13 @@ function updateTokenContract(contract: Address , tokenHolder: string): void {
     // tslint:disable-next-line: ban-types
     tokenContract.tokenHolders = new Array<string>();
   }
-  if (tokenHolder != null) {
+  if (tokenHolder !== null) {
       let tokenHolders = tokenContract.tokenHolders;
-      let i = tokenHolders.indexOf(tokenHolder);
-      if (i == -1) {
+      if (tokenHolders) {
+        let i = tokenHolders.indexOf(tokenHolder);
+        if (i == -1) {
           tokenHolders.push(tokenHolder);
+        }
       }
       tokenContract.tokenHolders = tokenHolders;
   }

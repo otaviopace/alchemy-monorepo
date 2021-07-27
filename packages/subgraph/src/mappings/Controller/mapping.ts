@@ -510,7 +510,7 @@ export function setGenericSchemeMultiCallParams(
   let addressZero = '0x0000000000000000000000000000000000000000';
   if (!equalStrings(schemeConstraints.toHex(), addressZero)) {
     let schemeConstraintsContract = SchemeConstraints.bind(schemeConstraints);
-    genericSchemeMultiCallParams.contractsWhiteList = schemeConstraintsContract.getContractsWhiteList() as Bytes[];
+    genericSchemeMultiCallParams.contractsWhiteList = changetype<Bytes[]>(schemeConstraintsContract.getContractsWhiteList());
   }
   genericSchemeMultiCallParams.save();
   if (controllerScheme != null) {

@@ -33,7 +33,7 @@ export function addProposalStateChangeEvent(proposalId: Bytes, user: Address, ti
 export function addNewReputationHolderEvent(reputationHolder: ReputationHolder): void {
     addEvent(
         'NewReputationHolder',
-        crypto.keccak256(concat(reputationHolder.address, reputationHolder.createdAt as ByteArray)).toHex(),
+        crypto.keccak256(concat(reputationHolder.address, changetype<ByteArray>(reputationHolder.createdAt))).toHex(),
         '{ "reputationAmount": "' + reputationHolder.balance.toString() + '" }',
         null,
         reputationHolder.address,
@@ -112,9 +112,9 @@ function addEvent(
     type: string,
     id: string,
     data: string,
-    proposal: string,
-    user: Bytes,
-    dao: string,
+    proposal: string | null,
+    user: Bytes | null,
+    dao: string | null,
     timestamp: BigInt,
 ): void {
     let eventEnt = new Event(id);

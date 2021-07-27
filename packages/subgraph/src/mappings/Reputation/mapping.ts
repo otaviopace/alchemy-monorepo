@@ -42,7 +42,9 @@ function update(contract: Address, owner: Address, timestamp: BigInt): void {
     repHolder.createdAt = timestamp;
     if (!balance.isZero()) {
       repHolder.save();
-      reputationHolders.push(repHolder.id);
+      if (reputationHolders) {
+        reputationHolders.push(repHolder.id);
+      }
       domain.addDaoMember(repHolder as ReputationHolder);
       // create a new one
     }
@@ -52,7 +54,9 @@ function update(contract: Address, owner: Address, timestamp: BigInt): void {
     if (!balance.isZero()) {
       // update
       repHolder.save();
-      reputationHolders.push(repHolder.id);
+      if (reputationHolders) {
+        reputationHolders.push(repHolder.id);
+      }
     } else {
       // remove
       store.remove('ReputationHolder', repHolder.id);
