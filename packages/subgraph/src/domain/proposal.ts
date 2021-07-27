@@ -19,10 +19,10 @@ import { updateThreshold } from './gpqueue';
 import { getReputation } from './reputation';
 
 export class IPFSData {
-  public title: string;
-  public description: string;
-  public url: string;
-  public tags: JSONValue[];
+  public title!: string;
+  public description!: string;
+  public url!: string;
+  public tags!: JSONValue[];
 }
 
 export function parseOutcome(num: BigInt): string {
@@ -53,7 +53,6 @@ export function getProposal(id: string): Proposal {
     proposal.confidenceThreshold = BigInt.fromI32(0);
     proposal.accountsWithUnclaimedRewards = new Array<Bytes>();
     proposal.paramsHash = new Bytes(32);
-    proposal.organizationId = null;
     proposal.scheme = null;
     proposal.descriptionHash = '';
     proposal.title = '';
@@ -72,8 +71,9 @@ export function getProposal(id: string): Proposal {
 }
 
 export function getProposalIPFSData(proposal: Proposal): Proposal {
+  let title = proposal.title;
   // IPFS reading
-  if (!equalStrings(proposal.descriptionHash, '') && equalStrings(proposal.title, '')) {
+  if (!equalStrings(proposal.descriptionHash, '') && title !== null && equalStrings(title, '')) {
     let data = getIPFSData(proposal.descriptionHash);
     proposal.title = data.title;
     proposal.description = data.description;
@@ -94,7 +94,9 @@ export function getProposalIPFSData(proposal: Proposal): Proposal {
             tagEnt.competitionSuggestions = [];
           }
           let tagProposals = tagEnt.proposals;
-          tagProposals.push(proposal.id);
+          if (tagProposals !== null) {
+            tagProposals.push(proposal.id);
+          }
           tagEnt.proposals = tagProposals;
           tagEnt.numberOfProposals = tagEnt.numberOfProposals.plus(BigInt.fromI32(1));
           tagEnt.save();
@@ -115,7 +117,7 @@ export function getIPFSData(descHash: string): IPFSData {
   result.tags = [];
 
   let ipfsData = ipfs.cat('/ipfs/' + descHash);
-  if (ipfsData != null &&
+  if (ipfsData !== null &&
      !equalStrings(ipfsData.toString(), '{}') &&
      equalStrings(ipfsData.toString().substr(0, 1), '{') &&
      equalStrings(ipfsData.toString().substr(ipfsData.toString().length - 1, 1), '}')
@@ -131,19 +133,28 @@ export function getIPFSData(descHash: string): IPFSData {
     if (descJson.kind !== JSONValueKind.OBJECT) {
       return result;
     }
-    if (descJson.toObject().get('title') != null && descJson.toObject().get('title').kind === JSONValueKind.STRING) {
-      result.title = descJson.toObject().get('title').toString();
+
+    let descJsonObject = descJson.toObject();
+
+    let title = descJsonObject.get('title');
+    if (title !== null && title.kind === JSONValueKind.STRING) {
+      result.title = title.toString();
     }
-    if (descJson.toObject().get('description') != null &&
-    descJson.toObject().get('description').kind === JSONValueKind.STRING) {
-      result.description = descJson.toObject().get('description').toString();
+
+    let description = descJsonObject.get('description');
+    if (description !== null &&
+    description.kind === JSONValueKind.STRING) {
+      result.description = description.toString();
     }
-    if (descJson.toObject().get('url') != null &&
-    descJson.toObject().get('url').kind === JSONValueKind.STRING) {
-      result.url = descJson.toObject().get('url').toString();
+
+    let url = descJsonObject.get('url');
+    if (url !== null &&
+    url.kind === JSONValueKind.STRING) {
+      result.url = url.toString();
     }
+
     let tagsData = descJson.toObject().get('tags');
-    if (tagsData != null && tagsData.kind === JSONValueKind.ARRAY) {
+    if (tagsData !== null && tagsData.kind === JSONValueKind.ARRAY) {
       result.tags = tagsData.toArray();
     }
   }
@@ -198,9 +209,12 @@ export function updateProposalState(id: Bytes, state: number, gpAddress: Address
 }
 
 export function setProposalState(proposal: Proposal, state: number, gpTimes: BigInt[]): void {
+  let scheme = proposal.scheme;
+  let controllerScheme: ControllerScheme | null;
+  if (scheme) {
+    controllerScheme = ControllerScheme.load(scheme);
+  }
   // enum ProposalState { None, ExpiredInQueue, Executed, Queued, PreBoosted, Boosted, QuietEndingPeriod}
-  let controllerScheme = ControllerScheme.load(proposal.scheme);
-  let dao = DAO.load(proposal.dao);
   if (controllerScheme != null) {
     if (equalStrings(proposal.stage, 'Queued')) {
       controllerScheme.numberOfQueuedProposals = controllerScheme
@@ -214,6 +228,8 @@ export function setProposalState(proposal: Proposal, state: number, gpTimes: Big
       .numberOfBoostedProposals.minus(BigInt.fromI32(1));
     }
   }
+
+  let dao = DAO.load(proposal.dao);
   if (dao != null) {
     if (equalStrings(proposal.stage, 'Queued')) {
       dao.numberOfQueuedProposals = dao.numberOfQueuedProposals.minus(BigInt.fromI32(1));
@@ -224,6 +240,7 @@ export function setProposalState(proposal: Proposal, state: number, gpTimes: Big
       dao.numberOfBoostedProposals = dao.numberOfBoostedProposals.minus(BigInt.fromI32(1));
     }
   }
+
   if (state == 1) {
     // Closed
     proposal.stage = 'ExpiredInQueue';
@@ -239,10 +256,12 @@ export function setProposalState(proposal: Proposal, state: number, gpTimes: Big
     // Executed
     proposal.stage = 'Executed';
   } else if (state == 3) {
+    let genesisProtocolParams = GenesisProtocolParam.load(proposal.genesisProtocolParams);
     // Queued
     proposal.stage = 'Queued';
-    proposal.closingAt =  proposal.createdAt +
-                          GenesisProtocolParam.load(proposal.genesisProtocolParams).queuedVotePeriodLimit;
+    if (genesisProtocolParams) {
+      proposal.closingAt =  proposal.createdAt + genesisProtocolParams.queuedVotePeriodLimit;
+    }
     if (controllerScheme != null) {
       controllerScheme.numberOfQueuedProposals = controllerScheme
       .numberOfQueuedProposals.plus(BigInt.fromI32(1));
@@ -251,11 +270,13 @@ export function setProposalState(proposal: Proposal, state: number, gpTimes: Big
       dao.numberOfQueuedProposals = dao.numberOfQueuedProposals.plus(BigInt.fromI32(1));
     }
   } else if (state == 4) {
+    let genesisProtocolParams = GenesisProtocolParam.load(proposal.genesisProtocolParams);
     // PreBoosted
     proposal.stage = 'PreBoosted';
     proposal.preBoostedAt = gpTimes[2];
-    proposal.preBoostedClosingAt =  proposal.preBoostedAt +
-                          GenesisProtocolParam.load(proposal.genesisProtocolParams).preBoostedVotePeriodLimit;
+    if (genesisProtocolParams) {
+      proposal.preBoostedClosingAt =  proposal.preBoostedAt + genesisProtocolParams.preBoostedVotePeriodLimit;
+    }
     if (controllerScheme != null) {
       controllerScheme.numberOfPreBoostedProposals = controllerScheme
       .numberOfPreBoostedProposals.plus(BigInt.fromI32(1));
@@ -264,11 +285,13 @@ export function setProposalState(proposal: Proposal, state: number, gpTimes: Big
       dao.numberOfPreBoostedProposals = dao.numberOfPreBoostedProposals.plus(BigInt.fromI32(1));
     }
   } else if (state == 5) {
+    let genesisProtocolParams = GenesisProtocolParam.load(proposal.genesisProtocolParams);
     // Boosted
     proposal.boostedAt = gpTimes[1];
     proposal.stage = 'Boosted';
-    proposal.closingAt =  proposal.boostedAt +
-                          GenesisProtocolParam.load(proposal.genesisProtocolParams).boostedVotePeriodLimit;
+    if (genesisProtocolParams) {
+      proposal.closingAt =  proposal.boostedAt + genesisProtocolParams.boostedVotePeriodLimit;
+    }
     if (controllerScheme != null) {
       controllerScheme.numberOfBoostedProposals = controllerScheme
       .numberOfBoostedProposals.plus(BigInt.fromI32(1));
@@ -277,10 +300,12 @@ export function setProposalState(proposal: Proposal, state: number, gpTimes: Big
       dao.numberOfBoostedProposals = dao.numberOfBoostedProposals.plus(BigInt.fromI32(1));
     }
   } else if (state == 6) {
+    let genesisProtocolParams = GenesisProtocolParam.load(proposal.genesisProtocolParams);
     // QuietEndingPeriod
     proposal.quietEndingPeriodBeganAt = gpTimes[1];
-    proposal.closingAt =  proposal.quietEndingPeriodBeganAt +
-                          GenesisProtocolParam.load(proposal.genesisProtocolParams).quietEndingPeriod;
+    if (genesisProtocolParams) {
+      proposal.closingAt =  proposal.quietEndingPeriodBeganAt + genesisProtocolParams.quietEndingPeriod;
+    }
     proposal.stage = 'QuietEndingPeriod';
   }
   if (controllerScheme != null) {
@@ -325,7 +350,14 @@ export function updateGPProposal(
     proposal.scheme,
   );
   proposal.gpQueue = proposal.organizationId.toHex();
-  let scheme = ControllerScheme.load(proposal.scheme);
+  let proposalScheme = proposal.scheme;
+
+  let scheme: ControllerScheme | null;
+
+  let scheme = ControllerScheme.load(proposalScheme);
+  if (proposalScheme) {
+    scheme = ControllerScheme.load(proposalScheme);
+  }
 
   if (scheme != null && scheme.gpQueue == null) {
     scheme.gpQueue = proposal.organizationId.toHex();
@@ -337,9 +369,17 @@ export function updateGPProposal(
   saveDAO(dao);
   let reputation = getReputation(dao.nativeReputation);
   proposal.totalRepWhenCreated = reputation.totalSupply;
-  proposal.closingAt =  proposal.createdAt +
-                        GenesisProtocolParam.load(proposal.genesisProtocolParams).queuedVotePeriodLimit;
-  let controllerScheme = ControllerScheme.load(proposal.scheme);
+
+  let genesisProtocolParams = GenesisProtocolParam.load(proposal.genesisProtocolParams);
+  if (genesisProtocolParams) {
+    proposal.closingAt =  proposal.createdAt + genesisProtocolParams.queuedVotePeriodLimit;
+  }
+
+  let controllerScheme: ControllerScheme | null;
+  if (proposalScheme) {
+    controllerScheme = ControllerScheme.load(proposalScheme);
+  }
+
   if (controllerScheme != null) {
     controllerScheme.numberOfQueuedProposals = controllerScheme.numberOfQueuedProposals.plus(BigInt.fromI32(1));
     controllerScheme.save();
@@ -441,7 +481,7 @@ export function updateProposalExecution(
   } else {
     proposal.closingAt = (BigInt.fromI32(CLOSING_AT_TIME_INCREASE).minus(timestamp)).times(BigInt.fromI32(100));
   }
-  if (totalReputation != null) {
+  if (totalReputation !== null) {
     proposal.totalRepWhenExecuted = totalReputation;
   }
   saveProposal(proposal);
@@ -467,11 +507,13 @@ export function updateProposalExecutionState(id: string, executionState: number)
 export function addRedeemableRewardOwner(
   proposal: Proposal,
   redeemer: Bytes,
-): Proposal {
+): void {
   let accounts = proposal.accountsWithUnclaimedRewards;
+  if (!accounts) {
+    return
+  }
   accounts.push(redeemer);
   proposal.accountsWithUnclaimedRewards = accounts;
-  return proposal;
 }
 
 export function removeRedeemableRewardOwner(

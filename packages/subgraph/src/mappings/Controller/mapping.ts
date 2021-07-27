@@ -1,4 +1,4 @@
-import 'allocator/arena';
+// import 'allocator/arena';
 
 import {
   Address,

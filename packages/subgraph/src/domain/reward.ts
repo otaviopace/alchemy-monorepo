@@ -24,6 +24,9 @@ export function insertGPRewardsToHelper(proposalId: Bytes, beneficiary: Address)
   let rewardId = crypto.keccak256(concat(proposalId, beneficiary)).toHex();
   let gpRewardsHelper = getGPRewardsHelper(proposalId.toHex());
   let gpRewards = gpRewardsHelper.gpRewards;
+  if (gpRewards === null) {
+    return;
+  }
   // check if already exist
   let i = 0;
   for (i; i < gpRewards.length; i++) {
@@ -72,10 +75,10 @@ export function reputationRedemption(proposalId: Bytes, beneficiary: Address, ti
      return;
    }
 
-   if (reward.reputationForProposer != null) {
+   if (reward.reputationForProposer !== null) {
        reward.reputationForProposerRedeemedAt = timestamp;
    }
-   if (reward.reputationForVoter != null) {
+   if (reward.reputationForVoter !== null) {
        reward.reputationForVoterRedeemedAt = timestamp;
    }
 
@@ -95,13 +98,13 @@ export function shouldRemoveAccountFromUnclaimed(reward: GPReward): boolean {
     }
   }
 
-  return ((reward.reputationForVoter == null ||
+  return ((reward.reputationForVoter === null ||
     reward.reputationForVoterRedeemedAt.isZero() == false) &&
-     (reward.reputationForProposer == null ||
+     (reward.reputationForProposer === null ||
         reward.reputationForProposerRedeemedAt.isZero() == false) &&
-        (reward.tokensForStaker == null ||
+        (reward.tokensForStaker === null ||
           reward.tokensForStakerRedeemedAt.isZero() == false) &&
-          (reward.daoBountyForStaker == null ||
+          (reward.daoBountyForStaker === null ||
             reward.daoBountyForStakerRedeemedAt.isZero() == false)
      );
 }
@@ -144,9 +147,23 @@ export function insertGPRewards(
   let genesisProtocol = GenesisProtocol.bind(gpAddress);
   let i = 0;
   let gpRewards: string[] = getGPRewardsHelper(proposalId.toHex()).gpRewards as string[];
-  let controllerScheme = ControllerScheme.load(proposal.scheme.toString());
+  let proposalScheme = proposal.scheme;
+  if (proposalScheme === null) {
+    return;
+  }
+  let controllerScheme = ControllerScheme.load(proposalScheme.toString());
+  if (controllerScheme === null) {
+    return;
+  }
   if ((proposal.contributionReward !== null && equalStrings(proposal.winningOutcome, 'Pass')) && state !== 1) {
-    let contributionRewardProposal = ContributionRewardProposal.load(proposal.contributionReward.toString());
+    let contributionReward = proposal.contributionReward;
+    if (contributionReward === null) {
+      return;
+    }
+    let contributionRewardProposal = ContributionRewardProposal.load(contributionReward.toString());
+    if (contributionRewardProposal === null) {
+      return;
+    }
     addRedeemableRewardOwner(proposal, contributionRewardProposal.beneficiary);
   }
   for (i = 0; i < gpRewards.length; i++) {

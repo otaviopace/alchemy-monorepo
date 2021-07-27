@@ -1,4 +1,4 @@
-import 'allocator/arena';
+// import 'allocator/arena';
 
 // Import event types from the Token contract ABI
 import { Propose, Register, UnRegister } from '../../types/DAORegistry/DAORegistry';

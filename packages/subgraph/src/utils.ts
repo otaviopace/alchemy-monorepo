@@ -35,7 +35,7 @@ export const CLOSING_AT_TIME_INCREASE = 2147483647;
 export function eventId(event: ethereum.Event): string {
   return crypto
     .keccak256(
-      concat(event.transaction.hash, event.transactionLogIndex as ByteArray),
+      concat(event.transaction.hash, changetype<ByteArray>(event.transactionLogIndex)),
     )
     .toHex();
 }

@@ -237,7 +237,7 @@ function updateRedemption(
 ): void {
   let accountId = crypto.keccak256(concat(beneficiary, avatar));
 
-  let rewardId = crypto.keccak256(concat(rewardType, amount as ByteArray));
+  let rewardId = crypto.keccak256(concat(rewardType, changetype<ByteArray>(amount)));
 
   let uniqueId = crypto
     .keccak256(concat(proposalId, concat(accountId, rewardId)))

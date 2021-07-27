@@ -34,7 +34,7 @@ function daoYaml(contract, contractAddress, arcVersion) {
     },
     mapping: {
       kind: "ethereum/events",
-      apiVersion: "0.0.1",
+      apiVersion: "0.0.5",
       language: "wasm/assemblyscript",
       file: path.resolve(`${__dirname}/../src/mappings/${contract}/mapping.ts`),
       entities,

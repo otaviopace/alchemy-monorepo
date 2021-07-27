@@ -16,9 +16,12 @@ export function addNewDAOEvent(avatar: Address, daoName: string, timestamp: BigI
 
 export function addProposalStateChangeEvent(proposalId: Bytes, user: Address, timestamp: BigInt): void {
     let proposal = Proposal.load(proposalId.toHex());
+    if (!proposal) {
+        return;
+    }
     addEvent(
         'ProposalStageChange',
-        crypto.keccak256(concat(proposalId, timestamp as ByteArray)).toHex(),
+        crypto.keccak256(concat(proposalId, changetype<ByteArray>(timestamp))).toHex(),
         '{ "stage": "' + proposal.stage + '" }',
         proposalId.toHex(),
         user,
@@ -43,7 +46,7 @@ export function addVoteFlipEvent(proposalId: Bytes, proposal: Proposal, voter: A
     addEvent(
         'VoteFlip',
         crypto.keccak256(
-            concat(concat(proposalId, proposal.votesFor as ByteArray), proposal.votesAgainst as ByteArray),
+            concat(concat(proposalId, changetype<ByteArray>(proposal.votesFor)), changetype<ByteArray>(proposal.votesAgainst)),
             ).toHex(),
         '{ "outcome": "' + proposal.winningOutcome + '", "votesFor": "' + proposal.votesFor.toString() + '", "votesAgainst": "' + proposal.votesAgainst.toString() + '" }',
         proposalId.toHex(),
@@ -56,8 +59,8 @@ export function addVoteFlipEvent(proposalId: Bytes, proposal: Proposal, voter: A
 export function addNewProposalEvent(proposalId: Bytes, proposal: Proposal, timestamp: BigInt): void {
     addEvent(
         'NewProposal',
-        crypto.keccak256(concat(proposalId, timestamp as ByteArray)).toHex(),
-        '{ "title": "' + fixJsonQuotes(proposal.title) + '" }',
+        crypto.keccak256(concat(proposalId, changetype<ByteArray>(timestamp))).toHex(),
+        '{ "title": "' + fixJsonQuotes(proposal.title || '') + '" }',
         proposalId.toHex(),
         proposal.proposer,
         proposal.dao,

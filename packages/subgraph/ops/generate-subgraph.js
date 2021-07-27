@@ -201,7 +201,7 @@ function combineFragments(fragments, isTemplate, addresses, missingAddresses) {
       source,
       mapping: {
         kind: "ethereum/events",
-        apiVersion: "0.0.1",
+        apiVersion: "0.0.5",
         language: "wasm/assemblyscript",
         file: path.resolve(file),
         entities: entities ? entities : ["nothing"],
