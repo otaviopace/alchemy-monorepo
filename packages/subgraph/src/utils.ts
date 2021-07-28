@@ -26,7 +26,7 @@ export function concat(a: ByteArray, b: ByteArray): ByteArray {
   for (let j = 0; j < b.length; j++) {
     out[a.length + j] = b[j];
   }
-  return out as ByteArray;
+  return changetype<ByteArray>(out);
 }
 
 export const CLOSING_AT_TIME_DECREASE_GSMC = 32000000;
